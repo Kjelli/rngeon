@@ -1,0 +1,21 @@
+Size:
+  X: 16
+  Y: 16
+TileSource: tileset_subtiles_test
+TileAtlas:
+  - Type: Floor
+    Index: 0
+    MaskKind: Rough
+    Z: 0
+  - Type: Wall
+    Index: 1
+    MaskKind: Brick
+    Z: 1
+MaskSource: tileset_subtile_masks
+MaskAtlas:
+  - Name: Rough
+    StartIndex: 0
+    EndIndex: 15
+  - Name: Brick
+    StartIndex: 16
+    EndIndex: 31
