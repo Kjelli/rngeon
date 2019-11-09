@@ -22,11 +22,13 @@ namespace NewGame.Shared.Scenes
             Screen.isFullscreen = true;
             clearColor = Color.Black;
             setDesignResolution(800, 600, SceneResolutionPolicy.None);
-            var renderer = addRenderer(new RenderLayerExcludeRenderer(0));
+            addRenderer(new RenderLayerExcludeRenderer(0));
             addSceneComponent(new SceneEventEmitter());
             addSceneComponent(new SmartCamera());
             addEntityProcessor(new EntityMover());
             addEntityProcessor(new PlayerSystem());
+
+            addPostProcessor(new VignettePostProcessor(1));
 
             foreach (var asset in _sceneAssets)
             {
