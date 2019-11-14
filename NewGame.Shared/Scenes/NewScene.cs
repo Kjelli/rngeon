@@ -98,7 +98,9 @@ namespace NewGame.Shared.Scenes
                     x = Random.nextFloat() * mapWidth * Tile.Width;
                     y = Random.nextFloat() * mapHeight * Tile.Height;
                 } while (map.getComponent<DungeonMapComponent>().GetTileAtPosition(x, y).Type != TileType.Floor);
+
                 var bot = EntityFactory.Presets.UntrackedPlayer()
+                    .With(new MiniMapTracker(Color.Blue))
                     .AddInput<RandomInputController>()
                     .AtPosition(x, y)
                     .Create();

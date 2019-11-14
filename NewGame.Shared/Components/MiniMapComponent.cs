@@ -1,15 +1,17 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using NewGame.Shared.Entities;
+using NewGame.Shared.SceneComponents;
 using Nez;
 using System.Collections.Generic;
 
 namespace NewGame.Shared.Components
 {
-    public class MiniMapComponent : RenderableComponent, IUpdatable
+    public class MiniMapComponent : RenderableComponent
     {
+        private int _width;
+        private int _height;
+        private List<MiniMapTracker> _trackers { get; set; }
         public Texture2D Texture { get; set; }
-        public List<Entity> TrackedEntities { get; set; }
 
         public Dictionary<TileType, Color> Colors = new Dictionary<TileType, Color>
         {
@@ -17,13 +19,40 @@ namespace NewGame.Shared.Components
             { TileType.Floor, Color.White},
             { TileType.Wall, Color.Gray},
         };
-        private int _width;
-        private int _height;
+
+        public MiniMapComponent()
+        {
+            _trackers = new List<MiniMapTracker>();
+
+            var emitter = Core.scene
+                .getSceneComponent<SceneEventEmitter>()
+                .EntityEventEmitter;
+
+            // Events emitted by MiniMapTracker
+            emitter.addObserver(EntityEventType.MiniMapTrackerAdded,
+                    OnTrackerAdded);
+            emitter.addObserver(EntityEventType.MiniMapTrackerRemoved,
+                    OnTrackerRemoved);
+        }
+
+        private void OnTrackerAdded(Entity entity)
+        {
+            var tracker = entity.getComponent<MiniMapTracker>();
+            _trackers.Add(tracker);
+
+        }
+
+        private void OnTrackerRemoved(Entity entity)
+        {
+            var tracker = entity.getComponent<MiniMapTracker>();
+            _trackers.Remove(tracker);
+        }
 
         public void Build(Tile[,] tileMap)
         {
             _width = (int)tileMap.GetLongLength(0);
             _height = (int)tileMap.GetLongLength(1);
+
             Texture = new Texture2D(Core.graphicsDevice, _width, _height);
 
             var colorData = new Color[_width * _height];
@@ -49,21 +78,17 @@ namespace NewGame.Shared.Components
             if (Texture == null) return;
 
             graphics.batcher.draw(Texture, bounds);
-            foreach (var tracked in TrackedEntities)
+            foreach (var tracker in _trackers)
             {
+                var position = tracker.PositionGetter();
                 graphics.batcher.drawRect(
-                    _bounds.location.X + tracked.position.X / Tile.Width - 1,
-                    _bounds.location.Y + tracked.position.Y / Tile.Height - 1,
+                    _bounds.location.X + position.X / Tile.Width - 1,
+                    _bounds.location.Y + position.Y / Tile.Height - 1,
                     2,
                     2,
-                    Color.Red);
+                    tracker.DotColor);
 
             }
-        }
-
-        public void update()
-        {
-            TrackedEntities = entity.scene.entitiesOfType<Player>();
         }
 
         public override RectangleF bounds

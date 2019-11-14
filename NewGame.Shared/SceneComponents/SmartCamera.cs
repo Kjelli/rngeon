@@ -9,10 +9,11 @@ namespace NewGame.Shared.SceneComponents
 {
     public class SmartCamera : SceneComponent
     {
+        private readonly float _baseZoom = 5f;
+
         private List<Func<Vector2>> _positionGetters;
         private Camera _camera;
 
-        private float _baseZoom = 5f;
         private float _scrollZoom = 1f;
 
         public override void onEnabled()
@@ -24,6 +25,7 @@ namespace NewGame.Shared.SceneComponents
                 .getSceneComponent<SceneEventEmitter>()
                 .EntityEventEmitter;
 
+            // Events emitted by Camera Tracker
             emitter.addObserver(EntityEventType.CameraTrackerAdded,
                     OnTrackerAdded);
             emitter.addObserver(EntityEventType.CameraTrackerRemoved,
@@ -37,6 +39,7 @@ namespace NewGame.Shared.SceneComponents
                 .getSceneComponent<SceneEventEmitter>()
                 .EntityEventEmitter;
 
+            // Events emitted by Camera Tracker
             emitter.removeObserver(EntityEventType.CameraTrackerAdded,
                     OnTrackerAdded);
             emitter.removeObserver(EntityEventType.CameraTrackerRemoved,
@@ -98,8 +101,8 @@ namespace NewGame.Shared.SceneComponents
 
                 var maxXDistance = max.X - min.X;
                 var maxYDistance = max.Y - min.Y;
-                var targetWidth = Math.Max(Screen.width, (maxXDistance + 100));
-                var targetHeight = Math.Max(Screen.height, (maxYDistance + 100));
+                var targetWidth = Math.Max(Screen.width, maxXDistance + 100);
+                var targetHeight = Math.Max(Screen.height, maxYDistance + 100);
 
                 targetZoom = _baseZoom * Math.Min(Screen.width / targetWidth, Screen.height / targetHeight) * _scrollZoom;
                 targetPosition = min.toVector2() + ((max - min).toVector2() / 2);

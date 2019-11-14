@@ -37,6 +37,7 @@ namespace NewGame.Shared.Entities
             public static EntityBuilder<Player> Player()
             {
                 return UntrackedPlayer()
+                    .With<MiniMapTracker>()
                     .With<CameraTracker>();
             }
 
@@ -54,6 +55,7 @@ namespace NewGame.Shared.Entities
                     .setRadius(250f)
                     .setIntensity(1.8f)
                     .setZPosition(2);
+
                 light.renderLayer = Constants.RenderLayerLight;
 
                 return EntityFactory.Player()
@@ -146,7 +148,7 @@ namespace NewGame.Shared.Entities
 
         public EntityBuilder<T> With<C>() where C : Component, new()
         {
-            With<C>(new C());
+            With(new C());
             return this;
         }
 
