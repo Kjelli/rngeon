@@ -42,6 +42,9 @@ namespace NewGame.Shared.Components.Generation
             _sheet.Load();
         }
 
+        /// <summary>
+        /// Initiates random seed, and generates a map to be populated in the Result property
+        /// </summary>
         public void Generate()
         {
             if (_seed != null)
@@ -58,7 +61,6 @@ namespace NewGame.Shared.Components.Generation
             Stage7();
             Complete();
         }
-
 
         /// <summary>
         /// Generate space partitions
@@ -90,6 +92,10 @@ namespace NewGame.Shared.Components.Generation
             EnsureAllRoomsConnected();
         }
 
+        /// <summary>
+        /// For all rooms, create a new connection to another
+        /// </summary>
+
         private void CreateRoomConnections()
         {
             var shuffledRooms = new List<Room>(_rooms);
@@ -101,6 +107,9 @@ namespace NewGame.Shared.Components.Generation
             }
         }
 
+        /// <summary>
+        /// If not all rooms are accessible, creates new connections until they are
+        /// </summary>
         private void EnsureAllRoomsConnected()
         {
             var roomsFound = new HashSet<Room>();
@@ -172,6 +181,11 @@ namespace NewGame.Shared.Components.Generation
             _connectors.Add(new Connector(CropRectangle(horizontalCorridor), CropRectangle(verticalCorridor)));
         }
 
+        /// <summary>
+        /// Guard for attempting to place rooms/connections outside the map bounds
+        /// </summary>
+        /// <param name="rect"></param>
+        /// <returns></returns>
         private Rectangle CropRectangle(Rectangle rect)
         {
             var copy = rect;
@@ -267,6 +281,9 @@ namespace NewGame.Shared.Components.Generation
             //Pass2();
         }
 
+        /// <summary>
+        /// Removes 1x1, 2x1, and 1x2 walls when floors are on either side
+        /// </summary>
         private void Pass1()
         {
             for (var i = 0; i < 2; i++)
@@ -301,29 +318,6 @@ namespace NewGame.Shared.Components.Generation
                         {
                             _tileMap[x, y] = TileType.Floor;
                         }
-                    }
-                }
-            }
-        }
-        private void Pass2()
-        {
-            // Open 3x3 area has 3% chance to get middle piece turned into a wall
-            for (var x = 1; x < _width - 1; x += 1)
-            {
-                for (var y = 1; y < _height - 1; y += 1)
-                {
-                    if (_tileMap[x, y] == TileType.Floor
-                        && _tileMap[x, y + 1] == TileType.Floor
-                        && _tileMap[x, y - 1] == TileType.Floor
-                        && _tileMap[x + 1, y] == TileType.Floor
-                        && _tileMap[x - 1, y] == TileType.Floor
-                        && _tileMap[x - 1, y + 1] == TileType.Floor
-                        && _tileMap[x - 1, y - 1] == TileType.Floor
-                        && _tileMap[x + 1, y + 1] == TileType.Floor
-                        && _tileMap[x + 1, y - 1] == TileType.Floor
-                        && RNG.chance(3))
-                    {
-                        _tileMap[x, y] = TileType.Wall;
                     }
                 }
             }
@@ -390,7 +384,7 @@ namespace NewGame.Shared.Components.Generation
         }
 
         /// <summary>
-        ///  Gets closest rectangle to the provided rectangle, measured by hypotenuse from center
+        ///  Gets closest room to the provided room (and its connected rooms), measured by hypotenuse from center
         /// </summary>
         private Room GetClosestNewConnectionForRoom(ICollection<Room> others, Room room)
         {
@@ -429,18 +423,26 @@ namespace NewGame.Shared.Components.Generation
             return Math.Sqrt(Math.Pow(a.Center.X - b.Center.X, 2) + Math.Pow(a.Center.Y - b.Center.Y, 2));
         }
 
+        /// <summary>
+        /// Populates the tilemap with tile objects, resolved from a spritesheet
+        /// </summary>
+        /// <returns></returns>
         private IEnumerable<Tile> MakeTilesForRoom()
         {
             var tiles = Enumerable.Range(0, _width)
                 .SelectMany(x => Enumerable.Range(0, _height)
                     .Select(y =>
                     {
-                        var type = _tileMap[x, y];
-                        return new Tile(x, y, type, _sheet.ForType(type, x, y, _tileMap));
+                        return new Tile(x, y, _tileMap[x, y], _sheet.ForType(_tileMap[x, y], x, y, _tileMap));
                     }));
             return tiles;
         }
 
+        /// <summary>
+        /// For each partition, fit a rectangle into it, leaving a certain space around it for variation
+        /// </summary>
+        /// <param name="partition"></param>
+        /// <returns></returns>
         private Room FitRectangleIntoPartition(BinarySpacePartition partition)
         {
             var wiggleWidth = (partition.Bounds.Width - _minRoomSize.X) / 2;
@@ -498,6 +500,9 @@ namespace NewGame.Shared.Components.Generation
         }
     }
 
+    /// <summary>
+    /// The result of the generation. Contains tiles, colliderbounds and other entities of interest.
+    /// </summary>
     public class GenerationResult
     {
         public IList<Tile> Tiles { get; set; }

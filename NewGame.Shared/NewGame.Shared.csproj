@@ -64,6 +64,7 @@
     <Compile Include="Components\Generation\SubtileResolver.cs" />
     <Compile Include="Components\InputController.cs" />
     <Compile Include="Components\ExplorableTerrainComponent.cs" />
+    <Compile Include="Components\MiniMapTracker.cs" />
     <Compile Include="Components\RandomInputController.cs" />
     <Compile Include="Components\KeyboardController.cs" />
     <Compile Include="Components\Generation\Tile.cs" />

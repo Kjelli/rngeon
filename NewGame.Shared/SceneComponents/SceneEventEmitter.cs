@@ -1,5 +1,4 @@
-﻿using NewGame.Shared.Components;
-using Nez;
+﻿using Nez;
 using Nez.Systems;
 using System.Collections.Generic;
 
@@ -8,8 +7,9 @@ namespace NewGame.Shared.SceneComponents
     public enum EntityEventType
     {
         CameraTrackerAdded,
-        CameraTrackerChanged,
-        CameraTrackerRemoved
+        CameraTrackerRemoved,
+        MiniMapTrackerAdded,
+        MiniMapTrackerRemoved
     }
 
     internal class EntityEventTypeComparer : IEqualityComparer<EntityEventType>
@@ -25,7 +25,7 @@ namespace NewGame.Shared.SceneComponents
         }
     }
 
-    public class CameraTrackerEventEmitter : Emitter<EntityEventType, CameraTracker>
+    public class CameraTrackerEventEmitter : Emitter<EntityEventType, Entity>
     {
         public CameraTrackerEventEmitter() : base(new EntityEventTypeComparer())
         {

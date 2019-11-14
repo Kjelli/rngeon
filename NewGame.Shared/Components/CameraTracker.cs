@@ -19,7 +19,7 @@ namespace NewGame.Shared.Components
 
             entity.scene.getSceneComponent<SceneEventEmitter>()
                 .EntityEventEmitter
-                .emit(EntityEventType.CameraTrackerAdded, this);
+                .emit(EntityEventType.CameraTrackerAdded, entity);
         }
     }
 }

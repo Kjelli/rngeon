@@ -89,7 +89,7 @@ namespace NewGame.Shared.Scenes
             addEntity(player);
 
             // Add extra players with random input
-            var n = 0;
+            var n = 3;
             for (var i = 0; i < n; i++)
             {
                 float x, y;
@@ -98,7 +98,7 @@ namespace NewGame.Shared.Scenes
                     x = Random.nextFloat() * mapWidth * Tile.Width;
                     y = Random.nextFloat() * mapHeight * Tile.Height;
                 } while (map.getComponent<DungeonMapComponent>().GetTileAtPosition(x, y).Type != TileType.Floor);
-                var bot = EntityFactory.Presets.Player()
+                var bot = EntityFactory.Presets.UntrackedPlayer()
                     .AddInput<RandomInputController>()
                     .AtPosition(x, y)
                     .Create();

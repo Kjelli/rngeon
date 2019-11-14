@@ -34,7 +34,7 @@ namespace NewGame.Shared.Entities
                 finishColor = Color.Black,
                 finishParticleSize = 0f,
                 startParticleSize = 2f,
-                emissionRate = 0.5f + Random.nextFloat() * 0.5f,
+                emissionRate = 1.5f + Random.nextFloat() * 0.5f,
                 duration = -1,
                 gravity = new Vector2(0, 8f),
                 sourcePosition = position,

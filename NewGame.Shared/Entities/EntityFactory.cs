@@ -36,6 +36,12 @@ namespace NewGame.Shared.Entities
         {
             public static EntityBuilder<Player> Player()
             {
+                return UntrackedPlayer()
+                    .With<CameraTracker>();
+            }
+
+            public static EntityBuilder<Player> UntrackedPlayer()
+            {
                 var texture = Core.content.Load<Texture2D>(Content.Textures.Test);
 
                 var sprite = new Sprite(texture)
@@ -46,15 +52,14 @@ namespace NewGame.Shared.Entities
 
                 var light = new PointLight(Color.Orange)
                     .setRadius(250f)
-                    .setIntensity(2.8f)
+                    .setIntensity(1.8f)
                     .setZPosition(2);
                 light.renderLayer = Constants.RenderLayerLight;
 
                 return EntityFactory.Player()
                     .With<Velocity>()
                     .With<Mover>()
-                    .With<CameraTracker>()
-                    .With(new CircleCollider(6f))
+                    .With(new CircleCollider(4f))
                     .With(light)
                     .With(sprite);
             }
