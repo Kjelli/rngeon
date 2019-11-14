@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using NewGame.Shared.Components.Generation;
 using Nez;
 using System;
@@ -12,36 +11,30 @@ namespace NewGame.Shared.Components
     public class DungeonMapComponent : RenderableComponent, IUpdatable
     {
         private DungeonMapGenerator _generator;
-        private readonly int? _seed;
 
-        public int MapWidth, MapHeight;
-        public int TileWidth = 16, TileHeight = 16;
+        private int _mapWidth;
+        private int _mapHeight;
 
         public Tile[,] Tiles;
 
-        public DungeonMapComponent(int mapWidth = 100, int mapHeight = 100, int? seed = null)
+        public void Generate(DungeonMapSettings settings)
         {
-            _seed = seed;
-            MapWidth = mapWidth;
-            MapHeight = mapHeight;
+            _mapWidth = settings.Width;
+            _mapHeight = settings.Height;
 
-            Generate();
-
-            material = new Material();
-            material.blendState = BlendState.NonPremultiplied;
-        }
-
-        private void Generate()
-        {
-            Tiles = new Tile[MapWidth, MapHeight];
+            Tiles = new Tile[_mapWidth, _mapHeight];
             Tiles.Initialize();
 
-            _generator = new DungeonMapGenerator(MapWidth, MapHeight);
-            _generator.Generate(_seed);
+            _generator = new DungeonMapGenerator(settings);
+            _generator.Generate();
 
             foreach (var generated in _generator.Result.Tiles)
             {
                 Tiles[generated.TilePosition.X, generated.TilePosition.Y] = generated;
+            }
+            foreach (var entity in _generator.Result.Entities)
+            {
+                Core.scene.addEntity(entity);
             }
         }
 
@@ -59,7 +52,7 @@ namespace NewGame.Shared.Components
 
         public Tile GetTileAtPosition(float x, float y)
         {
-            return Tiles[(int)Math.Floor(x / Tile.TileWidth), (int)Math.Floor(y / Tile.TileHeight)];
+            return Tiles[(int)Math.Floor(x / Tile.Width), (int)Math.Floor(y / Tile.Height)];
         }
 
 
@@ -67,10 +60,10 @@ namespace NewGame.Shared.Components
         {
             var camera = entity.scene.camera;
 
-            var xStart = (int)Math.Max(camera.bounds.left / Tile.TileWidth - 1, 0);
-            var yStart = (int)Math.Max(camera.bounds.top / Tile.TileHeight - 1, 0);
-            var xCount = Math.Min((int)(camera.bounds.width / Tile.TileWidth + 3), MapWidth - xStart);
-            var yCount = Math.Min((int)(camera.bounds.height / Tile.TileHeight + 3), MapHeight - yStart);
+            var xStart = (int)Math.Max(camera.bounds.left / Tile.Width - 1, 0);
+            var yStart = (int)Math.Max(camera.bounds.top / Tile.Height - 1, 0);
+            var xCount = Math.Min((int)(camera.bounds.width / Tile.Width + 3), _mapWidth - xStart);
+            var yCount = Math.Min((int)(camera.bounds.height / Tile.Height + 3), _mapHeight - yStart);
 
             var xBounds = Enumerable.Range(xStart, xCount);
             var yBounds = Enumerable.Range(yStart, yCount);
@@ -100,7 +93,7 @@ namespace NewGame.Shared.Components
             {
                 if (_areBoundsDirty)
                 {
-                    _bounds.size = new Vector2(MapWidth * TileWidth, MapHeight * TileHeight);
+                    _bounds.size = new Vector2(_mapWidth * Tile.Width, _mapHeight * Tile.Height);
                     _areBoundsDirty = false;
                 }
 

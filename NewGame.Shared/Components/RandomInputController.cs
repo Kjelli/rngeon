@@ -12,7 +12,7 @@ namespace NewGame.Shared.Components
         }
         public override void update()
         {
-            LeftStickInput = new Vector2(_axisLimit * 2 * (Random.nextFloat() - 0.5f), _axisLimit * 2 * (Random.nextFloat() - 0.5f));
+            MoveInput = new Vector2(_axisLimit * 2 * (Random.nextFloat() - 0.5f), _axisLimit * 2 * (Random.nextFloat() - 0.5f));
         }
     }
 }

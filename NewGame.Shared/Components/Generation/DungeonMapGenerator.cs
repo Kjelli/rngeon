@@ -1,5 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using NewGame.Shared.Data;
+using NewGame.Shared.Entities;
 using NewGame.Shared.Utilities;
 using Nez;
 using System;
@@ -11,8 +12,12 @@ namespace NewGame.Shared.Components.Generation
 {
     public class DungeonMapGenerator
     {
+        private readonly TileSheet _sheet;
+        private readonly int? _seed;
         private readonly int _width;
         private readonly int _height;
+        private readonly Point _minRoomSize;
+        private readonly Point _maxRoomSize;
 
         private BinarySpacePartition _tree;
 
@@ -21,24 +26,27 @@ namespace NewGame.Shared.Components.Generation
         private IList<Connector> _connectors;
         private IList<RectangleF> _colliderBounds;
         private TileType[,] _tileMap;
+        private IList<Entity> _entities;
 
-        private TileSheet _sheet;
 
         public GenerationResult Result { get; private set; }
 
-        public DungeonMapGenerator(int width, int height)
+        public DungeonMapGenerator(DungeonMapSettings settings)
         {
-            _width = width;
-            _height = height;
-            _sheet = YamlSerializer.Deserialize<TileSheet>(Content.Data.Tileset_subtiles_test_atlas);
+            _seed = settings.Seed;
+            _width = settings.Width;
+            _height = settings.Height;
+            _minRoomSize = settings.MinRoomSize;
+            _maxRoomSize = settings.MaxRoomSize;
+            _sheet = YamlSerializer.Deserialize<TileSheet>(settings.TileSheet);
             _sheet.Load();
         }
 
-        public void Generate(int? seed)
+        public void Generate()
         {
-            if (seed != null)
+            if (_seed != null)
             {
-                RNG.setSeed(seed.Value);
+                RNG.setSeed(_seed.Value);
             }
 
             Stage1();
@@ -47,8 +55,10 @@ namespace NewGame.Shared.Components.Generation
             Stage4();
             Stage5();
             Stage6();
+            Stage7();
             Complete();
         }
+
 
         /// <summary>
         /// Generate space partitions
@@ -56,15 +66,7 @@ namespace NewGame.Shared.Components.Generation
         private void Stage1()
         {
             _tree = new BinarySpacePartition(0, 0, _width, _height);
-            _tree.Split(300, 6);
-
-            var nodes = new List<BinarySpacePartition>();
-            _tree.GetLeafNodes(nodes);
-
-            var totalSpace = nodes.Select(b => b.Bounds)
-                .Sum(b => b.Width * b.Height);
-
-            Console.WriteLine($"Actual space: {totalSpace}, Expected space: {_width * _height}");
+            _tree.Split(_minRoomSize, _maxRoomSize);
         }
 
         /// <summary>
@@ -84,22 +86,107 @@ namespace NewGame.Shared.Components.Generation
         private void Stage3()
         {
             _connectors = new List<Connector>();
-            var unconnected = new List<Room>(_rooms);
-            var connected = new List<Room>();
+            CreateRoomConnections();
+            EnsureAllRoomsConnected();
+        }
 
-            connected.Add(_rooms.randomItem());
-
-            while (unconnected.Count > 0)
+        private void CreateRoomConnections()
+        {
+            var shuffledRooms = new List<Room>(_rooms);
+            shuffledRooms.shuffle();
+            foreach (var room in shuffledRooms)
             {
-                var rect = unconnected.randomItem();
-                var closest = GetClosestRoom(connected, rect);
-
-                ConnectRooms(rect.Bounds, closest.Bounds);
-
-                connected.Add(rect);
-                unconnected.Remove(rect);
+                var closest = GetClosestNewConnectionForRoom(shuffledRooms, room);
+                ConnectRooms(closest, room);
             }
         }
+
+        private void EnsureAllRoomsConnected()
+        {
+            var roomsFound = new HashSet<Room>();
+            var roomsToSearch = new List<Room>();
+
+            do
+            {
+                roomsFound.Clear();
+                roomsToSearch.Clear();
+                // Search from first room
+                roomsToSearch.Add(_rooms.First());
+
+                // Add every connection to rooms found
+                for (var i = 0; i < roomsToSearch.Count; i++)
+                {
+                    var current = roomsToSearch[i];
+                    // Add connected rooms we haven't seen before
+                    var newConnections = current.Connections
+                        .Where(connection => !roomsFound.Contains(connection));
+
+                    if (newConnections.Count() > 0)
+                    {
+                        roomsToSearch.AddRange(newConnections);
+                        i = 0;
+                    }
+                    roomsFound.Add(current);
+                    roomsToSearch.Remove(current);
+                }
+
+                // If first room didn't have any connections
+                if (roomsFound.Count == 1)
+                {
+                    // Connect it to a random room
+                    var closestFound = GetClosestNewConnectionForRoom(_rooms, roomsFound.First());
+                    ConnectRooms(roomsFound.First(), closestFound);
+                    continue;
+                }
+
+                // If we did not find all rooms
+                if (roomsFound.Count != _rooms.Count)
+                {
+                    // Connect a room we didn't find, to closest room of the ones we found
+                    var roomNotFound = _rooms.Except(roomsFound).First();
+                    var closestFound = GetClosestNewConnectionForRoom(roomsFound, roomNotFound);
+                    ConnectRooms(roomNotFound, closestFound);
+                }
+            } while (roomsFound.Count != _rooms.Count); // Repeat until all rooms are found
+        }
+
+
+        /// <summary>
+        /// Connects specified rooms by creating connectors to form a corridor
+        /// </summary>
+        private void ConnectRooms(Room a, Room b)
+        {
+            var leftMost = a.Bounds.Center.X < b.Bounds.Center.X ? a.Bounds : b.Bounds;
+            var rightMost = a.Bounds == leftMost ? b.Bounds : a.Bounds;
+            var topMost = a.Bounds.Center.Y < b.Bounds.Center.Y ? a.Bounds : b.Bounds;
+            var bottomMost = a.Bounds == topMost ? b.Bounds : a.Bounds;
+
+            var size = RNG.choose(5, 7);
+            var midPoint = new Point(rightMost.Center.X + size / 2, bottomMost.Center.Y - size / 2);
+
+            var horizontalCorridor = new Rectangle(leftMost.Center.X - size / 2, midPoint.Y - size / 2, midPoint.X - leftMost.Center.X + size / 2, size);
+            var verticalCorridor = new Rectangle(topMost.Center.X - size / 2, topMost.Center.Y - size / 2, size, midPoint.Y - topMost.Center.Y + size);
+
+            a.Connect(b);
+
+            _connectors.Add(new Connector(CropRectangle(horizontalCorridor), CropRectangle(verticalCorridor)));
+        }
+
+        private Rectangle CropRectangle(Rectangle rect)
+        {
+            var copy = rect;
+            while (copy.X < 0)
+            {
+                copy = new Rectangle(copy.X + 1, copy.Y, copy.Width - 1, copy.Height);
+            }
+
+            while (copy.Y < 0)
+            {
+                copy = new Rectangle(copy.X, copy.Y + 1, copy.Width, copy.Height + 1);
+            }
+            return copy;
+        }
+
 
         /// <summary>
         /// Map tiles for rooms
@@ -141,7 +228,7 @@ namespace NewGame.Shared.Components.Generation
 
                     if (startX >= 0 && (x == _width - 1 || _tileMap[x, y] == TileType.Floor))
                     {
-                        var horizontalBounds = new RectangleF(startX * Tile.TileWidth, y * Tile.TileHeight, (x - startX) * Tile.TileWidth, Tile.TileHeight);
+                        var horizontalBounds = new RectangleF(startX * Tile.Width, y * Tile.Height, (x - startX) * Tile.Width, Tile.Height);
                         tempBounds[y].Add(horizontalBounds);
                         startX = -1;
                     }
@@ -177,53 +264,50 @@ namespace NewGame.Shared.Components.Generation
         private void SmoothRooms()
         {
             Pass1();
-            Pass2();
+            //Pass2();
         }
 
         private void Pass1()
         {
-            for (var x = 2; x < _width - 2; x += 1)
+            for (var i = 0; i < 2; i++)
             {
-                for (var y = 2; y < _height - 2; y += 1)
+                for (var x = 2; x < _width - 2; x += 1)
                 {
-                    // Walls with floors on either side are replaced with floors
-                    if (_tileMap[x, y] == TileType.Wall
-                        && _tileMap[x - 1, y] == TileType.Floor
-                        && _tileMap[x + 1, y] == TileType.Floor)
+                    for (var y = 2; y < _height - 2; y += 1)
                     {
-                        _tileMap[x, y] = TileType.Floor;
-                    }
+                        // Double walls with floors on either side are replaced with floors
+                        if (_tileMap[x, y] == TileType.Wall
+                            && _tileMap[x + 1, y] == TileType.Wall
+                            && _tileMap[x - 1, y] == TileType.Floor
+                            && _tileMap[x + 2, y] == TileType.Floor)
+                        {
+                            _tileMap[x, y] = TileType.Floor;
+                            _tileMap[x + 1, y] = TileType.Floor;
+                        }
 
-                    if (_tileMap[x, y] == TileType.Wall
-                        && _tileMap[x, y - 1] == TileType.Floor
-                        && _tileMap[x, y + 1] == TileType.Floor)
-                    {
-                        _tileMap[x, y] = TileType.Floor;
-                    }
+                        if (_tileMap[x, y] == TileType.Wall
+                            && _tileMap[x, y + 1] == TileType.Wall
+                            && _tileMap[x, y - 1] == TileType.Floor
+                            && _tileMap[x, y + 2] == TileType.Floor)
+                        {
+                            _tileMap[x, y] = TileType.Floor;
+                            _tileMap[x, y + 1] = TileType.Floor;
+                        }
 
-                    // Double walls with floors on either side are replaced with floors
-                    if (_tileMap[x, y] == TileType.Wall
-                        && _tileMap[x + 1, y] == TileType.Wall
-                        && _tileMap[x - 1, y] == TileType.Floor
-                        && _tileMap[x + 2, y] == TileType.Floor)
-                    {
-                        _tileMap[x, y] = TileType.Floor;
-                        _tileMap[x + 1, y] = TileType.Floor;
-                    }
-
-                    if (_tileMap[x, y] == TileType.Wall
-                        && _tileMap[x, y + 1] == TileType.Wall
-                        && _tileMap[x, y - 1] == TileType.Floor
-                        && _tileMap[x, y + 2] == TileType.Floor)
-                    {
-                        _tileMap[x, y] = TileType.Floor;
-                        _tileMap[x, y + 1] = TileType.Floor;
+                        // Walls with floors on either side are replaced with floors
+                        if (_tileMap[x, y] == TileType.Wall
+                            && _tileMap[x - 1, y] == TileType.Floor
+                            && _tileMap[x + 1, y] == TileType.Floor)
+                        {
+                            _tileMap[x, y] = TileType.Floor;
+                        }
                     }
                 }
             }
         }
         private void Pass2()
         {
+            // Open 3x3 area has 3% chance to get middle piece turned into a wall
             for (var x = 1; x < _width - 1; x += 1)
             {
                 for (var y = 1; y < _height - 1; y += 1)
@@ -246,7 +330,7 @@ namespace NewGame.Shared.Components.Generation
         }
 
         /// <summary>
-        /// Fill in tiles in rooms
+        /// Fill in tiles. Populate result with tiles, entities and colliders
         /// </summary>
         private void Complete()
         {
@@ -255,6 +339,7 @@ namespace NewGame.Shared.Components.Generation
             {
                 Tiles = tiles,
                 ColliderBounds = _colliderBounds,
+                Entities = _entities
             };
         }
 
@@ -265,9 +350,9 @@ namespace NewGame.Shared.Components.Generation
         {
             _tileMap = new TileType[_width, _height];
 
-            var connectorBounds = _connectors.SelectMany(c => c.GetRectangles()).ToList();
+            var connectorBounds = _connectors.SelectMany(c => c.Rectangles).ToList();
             var roomBounds = _rooms.Select(r => r.Bounds);
-            foreach (var r in roomBounds.Concat(connectorBounds))
+            foreach (var r in connectorBounds)
             {
                 foreach (var x in Enumerable.Range(r.Left, r.Width))
                 {
@@ -275,8 +360,26 @@ namespace NewGame.Shared.Components.Generation
                     {
                         var type = TileType.Floor; // Floor
 
-                        if (x == 0 || x == r.Left || x == r.Right - 1
-                            || y == 0 || y == r.Top || y == r.Bottom - 1)
+                        if (x == 0 || x == _width - 1 || x == r.Left || x == r.Right - 1
+                            || y == 0 || y == _height - 1 || y == r.Top || y == r.Bottom - 1)
+                        {
+                            type = TileType.Wall; // Wall
+                        }
+                        _tileMap[x, y] = (TileType)Math.Max((int)_tileMap[x, y], (int)type);
+                    }
+                }
+            }
+
+            foreach (var r in roomBounds)
+            {
+                foreach (var x in Enumerable.Range(r.Left, r.Width))
+                {
+                    foreach (var y in Enumerable.Range(r.Top, r.Height))
+                    {
+                        var type = TileType.Floor; // Floor
+
+                        if (x == 0 || x == _width - 1 || x == r.Left || x == r.Right - 1
+                            || y == 0 || y == _height - 1 || y == r.Top || y == r.Bottom - 1)
                         {
                             type = TileType.Wall; // Wall
                         }
@@ -287,97 +390,31 @@ namespace NewGame.Shared.Components.Generation
         }
 
         /// <summary>
-        /// Connects specified rooms by creating three-part connectors to form a corridor
-        /// </summary>
-        private void ConnectRooms(Rectangle src, Rectangle dest)
-        {
-            var leftMost = src.Left > dest.Left ? dest : src;
-            var rightMost = leftMost == src ? dest : src;
-            var topMost = src.Top > dest.Top ? dest : src;
-            var bottomMost = topMost == src ? dest : src;
-
-            var connectorWidth = 4 + RNG.nextInt(2) * 2;
-
-            // Connect horizontally
-            var isHorizontallyCloser = rightMost.Left - leftMost.Right > bottomMost.Top - topMost.Bottom;
-
-            if (isHorizontallyCloser)
-            {
-                var horizontalConWidth = Math.Max((rightMost.Left - leftMost.Right) / 2, connectorWidth) + 2;
-
-                var leftConX = leftMost.Right - 2;
-                var leftConY = leftMost.Y + RNG.nextInt(leftMost.Height - connectorWidth);
-                var leftConnector = new Rectangle(leftConX, leftConY, horizontalConWidth, connectorWidth);
-
-                var rightConX = leftConnector.Right;
-                var rightConY = rightMost.Y + RNG.nextInt(rightMost.Height - connectorWidth);
-                var rightConnector = new Rectangle(rightConX, rightConY, horizontalConWidth, connectorWidth);
-
-                var bottomCon = rightConnector.Y > leftConnector.Y ? rightConnector : leftConnector;
-                var topCon = bottomCon == leftConnector ? rightConnector : leftConnector;
-
-                var midConX = leftConnector.Right - connectorWidth / 2;
-                var midConY = topCon.Y;
-                var midConHeight = bottomCon.Bottom - topCon.Top;
-                var midConnector = new Rectangle(midConX, midConY, connectorWidth, midConHeight);
-
-                var connector = new Connector
-                {
-                    A = leftConnector,
-                    Mid = midConnector,
-                    B = rightConnector
-                };
-
-                _connectors.Add(connector);
-            }
-            // Connect vertically
-            else
-            {
-                var topConX = topMost.X + RNG.nextInt(topMost.Width - connectorWidth);
-                var topConY = topMost.Bottom - 2;
-                var topConHeight = Math.Max(bottomMost.Top - topMost.Bottom, connectorWidth) / 2 + 2;
-                var topConnector = new Rectangle(topConX, topConY, connectorWidth, topConHeight);
-
-                var bottomConX = bottomMost.X + RNG.nextInt(bottomMost.Width - connectorWidth);
-                var bottomConY = topConnector.Bottom;
-                var bottomConHeight = Math.Max(bottomMost.Top - topMost.Bottom, connectorWidth) / 2 + 3;
-                var bottomConnector = new Rectangle(bottomConX, bottomConY, connectorWidth, bottomConHeight);
-
-                var rightCon = bottomConnector.X > topConnector.X ? bottomConnector : topConnector;
-                var leftCon = rightCon == topConnector ? bottomConnector : topConnector;
-
-                var midConX = leftCon.X;
-                var midConY = topConnector.Bottom - connectorWidth / 2;
-                var midConWidth = rightCon.Right - leftCon.Left;
-                var midConnector = new Rectangle(midConX, midConY, midConWidth, connectorWidth);
-
-                var connector = new Connector
-                {
-                    A = topConnector,
-                    Mid = midConnector,
-                    B = bottomConnector
-                };
-
-                _connectors.Add(connector);
-            }
-        }
-
-        /// <summary>
         ///  Gets closest rectangle to the provided rectangle, measured by hypotenuse from center
         /// </summary>
-        private Room GetClosestRoom(List<Room> others, Room room)
+        private Room GetClosestNewConnectionForRoom(ICollection<Room> others, Room room)
         {
-            var candidates = others.Where(r => r != room);
+            var candidates = others
+                .Where(other => other != room)
+                .Where(other => !room.Connections.Contains(other));
 
             double closestDistance = double.MaxValue;
-            var closest = candidates.First();
+            var closest = candidates.First(other => other != room);
+
             foreach (var candidate in candidates)
             {
-                var distance = DistanceToRectangle(room.Bounds, candidate.Bounds);
-                if (distance < closestDistance)
+                var subCandidates = candidate.Connections
+                    .Where(c => c != room)
+                    .Where(c => !c.Connections.Contains(room))
+                    .Where(c => others.Contains(c));
+                foreach (var subCandidate in candidates.Concat(subCandidates))
                 {
-                    closest = candidate;
-                    closestDistance = distance;
+                    var distance = DistanceToRectangle(room.Bounds, subCandidate.Bounds);
+                    if (distance < closestDistance)
+                    {
+                        closest = subCandidate;
+                        closestDistance = distance;
+                    }
                 }
             }
 
@@ -406,11 +443,15 @@ namespace NewGame.Shared.Components.Generation
 
         private Room FitRectangleIntoPartition(BinarySpacePartition partition)
         {
-            var x = RNG.nextInt(partition.Bounds.Width / 8);
-            var y = RNG.nextInt(partition.Bounds.Height / 8);
+            var wiggleWidth = (partition.Bounds.Width - _minRoomSize.X) / 2;
+            var wiggleHeight = (partition.Bounds.Height - _minRoomSize.Y) / 2;
 
-            var width = partition.Bounds.Width / 2 + RNG.nextInt(partition.Bounds.Width / 2 - x);
-            var height = partition.Bounds.Height / 2 + RNG.nextInt(partition.Bounds.Height / 2 - y);
+            var width = _minRoomSize.X + RNG.nextInt(wiggleWidth);
+            var height = _minRoomSize.Y + RNG.nextInt(wiggleHeight);
+
+            var x = RNG.nextInt(wiggleWidth);
+            var y = RNG.nextInt(wiggleHeight);
+
 
             var bounds = new Rectangle(partition.Bounds.X + x, partition.Bounds.Y + y, width, height);
             var room = new Room()
@@ -419,11 +460,48 @@ namespace NewGame.Shared.Components.Generation
             };
             return room;
         }
+
+        /// <summary>
+        /// Place torches
+        /// </summary>
+        private void Stage7()
+        {
+            _entities = new List<Entity>();
+            foreach (var room in _rooms)
+            {
+                var chance = 0.05f;
+                foreach (var x in Enumerable.Range(room.Bounds.X, room.Bounds.Width))
+                {
+                    foreach (var y in Enumerable.Range(room.Bounds.Y, room.Bounds.Height))
+                    {
+                        if (x != room.Bounds.Left && x != room.Bounds.Right - 1 && y != room.Bounds.Top && y != room.Bounds.Bottom - 1) continue;
+                        if (x == room.Bounds.Left && (y == room.Bounds.Bottom - 1 || y == room.Bounds.Top)) continue;
+                        if (x == room.Bounds.Right - 1 && (y == room.Bounds.Bottom - 1 || y == room.Bounds.Top)) continue;
+                        if (_tileMap[x, y] != TileType.Wall) continue;
+
+                        if (RNG.chance(chance))
+                        {
+                            _entities.Add(EntityFactory.Presets
+                                .Torch()
+                                .AtPosition(x * Tile.Width + 8, y * Tile.Height + 8)
+                                .Create());
+
+                            chance = 0f;
+                        }
+                        else
+                        {
+                            chance += 0.015f;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public class GenerationResult
     {
         public IList<Tile> Tiles { get; set; }
         public IList<RectangleF> ColliderBounds { get; set; }
+        public IList<Entity> Entities { get; set; }
     }
 }

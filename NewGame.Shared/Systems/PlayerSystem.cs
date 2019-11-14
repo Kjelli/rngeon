@@ -25,7 +25,7 @@ namespace NewGame.Shared.Systems
             var inputController = entity.getComponent<InputController>();
             var velocity = entity.getComponent<Velocity>();
 
-            velocity.Value = Vector2.Lerp(velocity.Value, inputController.LeftStickInput * 2f, Time.deltaTime * 8f);
+            velocity.Value = Vector2.Lerp(velocity.Value, inputController.MoveInput * (inputController.Sprint ? 2.0f : 1.0f), Time.deltaTime * 8f);
         }
     }
 }

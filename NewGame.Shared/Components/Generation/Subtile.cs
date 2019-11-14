@@ -20,7 +20,8 @@ namespace NewGame.Shared.Components.Generation
 
         private void CopyTextureData(Subtexture mask, Subtexture texture)
         {
-            var count = Tile.TileWidth * Tile.TileHeight / 4;
+            var count = Tile.Width * Tile.Height / 4;
+
             var maskData = new Color[count];
             mask.texture2D.GetData(0, mask.sourceRect, maskData, 0, count);
 

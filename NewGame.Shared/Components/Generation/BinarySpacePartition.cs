@@ -16,81 +16,88 @@ namespace NewGame.Shared.Components.Generation
             Bounds = new Rectangle(x, y, width, height);
         }
 
-        public void Split(int minimumArea, int maxIterations, int iteration = 1)
+        public void Split(Point minPartitionSize, Point maxPartitionSize)
         {
-            TryPartition(minimumArea);
+            bool shouldSplit = true;
 
-            if (iteration > 3 && RNG.chance(2))
+            if (Bounds.Width > minPartitionSize.X && Bounds.Width < maxPartitionSize.X
+                && Bounds.Height > minPartitionSize.Y && Bounds.Height < maxPartitionSize.Y)
             {
-                Console.WriteLine("Due to 2% chance, stopped splitting");
+                var chance = (float)Math.Pow((Bounds.Width * Bounds.Height) / (maxPartitionSize.X * maxPartitionSize.Y), 2);
+                shouldSplit = RNG.chance(chance);
+            }
+
+            if (!shouldSplit)
+            {
+                Console.WriteLine($"Satisfied room size with {(Bounds.Width * Bounds.Height)} ({minPartitionSize.X * minPartitionSize.Y}-{maxPartitionSize.X * maxPartitionSize.Y})");
                 return;
             }
 
-            if (SubPartitions != null && iteration < maxIterations)
+            TryPartition(minPartitionSize);
+
+            if (SubPartitions != null)
             {
-                SubPartitions[0].Split(minimumArea, maxIterations, iteration + 1);
-                SubPartitions[1].Split(minimumArea, maxIterations, iteration + 1);
+                SubPartitions[0].Split(minPartitionSize, maxPartitionSize);
+                SubPartitions[1].Split(minPartitionSize, maxPartitionSize);
             }
         }
 
-        private void TryPartition(int minimumArea)
+        private void TryPartition(Point minPartitionSize)
         {
             var horizontalBias = Math.Min(Bounds.Width / Bounds.Height, 1);
             var verticalBias = Math.Min(Bounds.Height / Bounds.Width, 1);
-            var horizontal = RNG.chance(50 + horizontalBias * 40 - verticalBias * 40);
+            int splitAt;
+            int tries = 0, maxRetries = 5;
 
-            if (horizontal)
+            bool isValidSplit;
+            bool isHorizontalSplit;
+            do
             {
-                int splitAt;
-                int tries = 0, maxRetries = 10;
-                do
+                isHorizontalSplit = RNG.chance(50 + horizontalBias * 20 - verticalBias * 20);
+                var splitPercent = 0.5f + 0.5f * (RNG.nextFloat() - 0.5f);
+
+                if (isHorizontalSplit)
                 {
                     tries++;
 
-                    var splitPercent = 0.5f + 0.1f * (RNG.nextFloat() - 0.5f);
                     splitAt = (int)Mathf.lerp(0, Bounds.Width, splitPercent);
-                }
-                while (splitAt * Bounds.Height < minimumArea && tries < maxRetries);
+                    var remainder = Bounds.Width - splitAt;
 
-                if (tries >= maxRetries)
+                    isValidSplit = splitAt >= minPartitionSize.X && remainder >= minPartitionSize.X;
+                }
+                else
                 {
-                    Console.WriteLine("Stopping split early due to minimum area constraint");
-                    return;
-                }
 
+                    splitAt = (int)Mathf.lerp(0, Bounds.Height, splitPercent);
+                    var remainder = Bounds.Height - splitAt;
+
+                    isValidSplit = splitAt >= minPartitionSize.Y && remainder >= minPartitionSize.Y;
+                }
+                tries++;
+            } while (!isValidSplit && tries < maxRetries);
+
+            if (!isValidSplit)
+            {
+                Console.WriteLine($"Reached minimum space constraints {Bounds.Width} x {Bounds.Height}");
+                return;
+            }
+
+            if (isHorizontalSplit)
+            {
                 SubPartitions = new BinarySpacePartition[2];
                 SubPartitions[0] = new BinarySpacePartition(Bounds.X, Bounds.Y,
                     splitAt, Bounds.Height);
                 SubPartitions[1] = new BinarySpacePartition(Bounds.X + splitAt,
                     Bounds.Y, Bounds.Width - splitAt, Bounds.Height);
-
                 Console.WriteLine($"Split width {Bounds.Width} into {SubPartitions[0].Bounds.Width} + {SubPartitions[1].Bounds.Width}");
             }
             else
             {
-                int splitAt;
-                int tries = 0, maxRetries = 10;
-                do
-                {
-                    tries++;
-
-                    var splitPercent = 0.5f + 0.1f * (RNG.nextFloat() - 0.5f);
-                    splitAt = (int)Mathf.lerp(0, Bounds.Height, splitPercent);
-                }
-                while (splitAt * Bounds.Width < minimumArea && tries < maxRetries);
-
-                if (tries >= maxRetries)
-                {
-                    Console.WriteLine("Stopping split early due to minimum area constraint");
-                    return;
-                }
-
                 SubPartitions = new BinarySpacePartition[2];
                 SubPartitions[0] = new BinarySpacePartition(Bounds.X, Bounds.Y,
                         Bounds.Width, splitAt);
                 SubPartitions[1] = new BinarySpacePartition(Bounds.X, Bounds.Y + splitAt,
                         Bounds.Width, Bounds.Height - splitAt);
-
                 Console.WriteLine($"Split height {Bounds.Height} into {SubPartitions[0].Bounds.Height} + {SubPartitions[1].Bounds.Height}");
             }
         }

@@ -69,6 +69,7 @@
     <Compile Include="Components\Generation\Tile.cs" />
     <Compile Include="Components\Generation\TileType.cs" />
     <Compile Include="Components\Velocity.cs" />
+    <Compile Include="Constants.cs" />
     <Compile Include="ContentPathGenerator.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -76,10 +77,14 @@
     </Compile>
     <Compile Include="Components\Generation\Subtile.cs" />
     <Compile Include="Data\TileSheet.cs" />
+    <Compile Include="Components\Generation\DungeonMapSettings.cs" />
     <Compile Include="Entities\EntityFactory.cs" />
     <Compile Include="Entities\Map.cs" />
+    <Compile Include="Entities\MiniMap.cs" />
     <Compile Include="Entities\Player.cs" />
+    <Compile Include="Entities\Props\Torch.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="Components\MiniMapComponent.cs" />
     <Compile Include="SceneComponents\SceneEventEmitter.cs" />
     <Compile Include="SceneComponents\SmartCamera.cs" />
     <Compile Include="Scenes\NewScene.cs" />

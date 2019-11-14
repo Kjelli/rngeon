@@ -7,14 +7,14 @@ namespace NewGame.Shared.Components
 {
     public class Tile
     {
-        public const int TileWidth = 16, TileHeight = 16;
+        public const int Width = 16, Height = 16;
 
         public static Vector2[] SubtileOffsets = new Vector2[]
         {
             Vector2.Zero,
-            new Vector2(TileWidth / 2, 0),
-            new Vector2(0, TileHeight / 2),
-            new Vector2(TileWidth / 2, TileHeight / 2)
+            new Vector2(Width / 2, 0),
+            new Vector2(0, Height / 2),
+            new Vector2(Width / 2, Height / 2)
         };
 
         public Point TilePosition { get; set; }
@@ -28,7 +28,7 @@ namespace NewGame.Shared.Components
             Subtiles = subtiles;
 
             TilePosition = new Point(x, y);
-            Bounds = new RectangleF(x * TileWidth, y * TileHeight, TileWidth, TileHeight);
+            Bounds = new RectangleF(x * Width, y * Height, Width, Height);
         }
 
         internal void Draw(Graphics graphics, Entity entity, Camera camera)
@@ -41,7 +41,7 @@ namespace NewGame.Shared.Components
                     Color.White,
                     entity.rotation,
                     Vector2.Zero,
-                    1.001f,
+                    1.01f,
                     SpriteEffects.None,
                     0);
 
@@ -52,7 +52,7 @@ namespace NewGame.Shared.Components
                    Color.White,
                    entity.rotation,
                    Vector2.Zero,
-                   1.001f,
+                   1.01f,
                    SpriteEffects.None,
                    0);
             }

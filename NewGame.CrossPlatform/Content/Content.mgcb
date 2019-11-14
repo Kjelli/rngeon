@@ -125,6 +125,18 @@
 /processorParam:TextureFormat=Color
 /build:textures/test.png
 
+#begin textures/tileset_props.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textures/tileset_props.png
+
 #begin textures/tileset_subtile_masks.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -148,6 +160,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:textures/tileset_subtiles_test.png
+
+#begin textures/tileset_subtiles_test_normal.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textures/tileset_subtiles_test_normal.png
 
 #begin textures/tileset_test.png
 /importer:TextureImporter

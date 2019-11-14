@@ -17,7 +17,8 @@ namespace NewGame.Shared.Components
         }
         public override void update()
         {
-            LeftStickInput = _leftStick.value;
+            MoveInput = _leftStick.value;
+            Sprint = Input.isKeyDown(Keys.LeftShift);
         }
     }
 }

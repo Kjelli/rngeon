@@ -1,4 +1,5 @@
-﻿using Nez;
+﻿using NewGame.Shared.Components;
+using Nez;
 using Nez.Systems;
 using System.Collections.Generic;
 
@@ -24,21 +25,21 @@ namespace NewGame.Shared.SceneComponents
         }
     }
 
-    public class EntityEventEmitter : Emitter<EntityEventType, Entity>
+    public class CameraTrackerEventEmitter : Emitter<EntityEventType, CameraTracker>
     {
-        public EntityEventEmitter() : base(new EntityEventTypeComparer())
+        public CameraTrackerEventEmitter() : base(new EntityEventTypeComparer())
         {
         }
     }
 
     public class SceneEventEmitter : SceneComponent
     {
-        public EntityEventEmitter EntityEventEmitter { get; set; }
+        public CameraTrackerEventEmitter EntityEventEmitter { get; set; }
 
         public override void onEnabled()
         {
             base.onEnabled();
-            EntityEventEmitter = new EntityEventEmitter();
+            EntityEventEmitter = new CameraTrackerEventEmitter();
         }
     }
 
