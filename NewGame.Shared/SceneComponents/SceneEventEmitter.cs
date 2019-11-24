@@ -36,9 +36,9 @@ namespace NewGame.Shared.SceneComponents
     {
         public CameraTrackerEventEmitter EntityEventEmitter { get; set; }
 
-        public override void onEnabled()
+        public override void OnEnabled()
         {
-            base.onEnabled();
+            base.OnEnabled();
             EntityEventEmitter = new CameraTrackerEventEmitter();
         }
     }

@@ -1,5 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
-using NewGame.Shared.Components;
+using NewGame.Shared.Entities.Components;
 using Nez;
 using System;
 using System.Collections.Generic;
@@ -16,76 +16,75 @@ namespace NewGame.Shared.SceneComponents
 
         private float _scrollZoom = 1f;
 
-        public override void onEnabled()
+        public override void OnEnabled()
         {
             _positionGetters = new List<Func<Vector2>>();
-            _camera = scene.camera;
+            _camera = Scene.Camera;
 
-            var emitter = scene
-                .getSceneComponent<SceneEventEmitter>()
+            var emitter = Scene
+                .GetSceneComponent<SceneEventEmitter>()
                 .EntityEventEmitter;
 
             // Events emitted by Camera Tracker
-            emitter.addObserver(EntityEventType.CameraTrackerAdded,
+            emitter.AddObserver(EntityEventType.CameraTrackerAdded,
                     OnTrackerAdded);
-            emitter.addObserver(EntityEventType.CameraTrackerRemoved,
+            emitter.AddObserver(EntityEventType.CameraTrackerRemoved,
                     OnTrackerRemoved);
 
         }
 
-        public override void onDisabled()
+        public override void OnDisabled()
         {
-            var emitter = scene
-                .getSceneComponent<SceneEventEmitter>()
+            var emitter = Scene
+                .GetSceneComponent<SceneEventEmitter>()
                 .EntityEventEmitter;
 
             // Events emitted by Camera Tracker
-            emitter.removeObserver(EntityEventType.CameraTrackerAdded,
+            emitter.RemoveObserver(EntityEventType.CameraTrackerAdded,
                     OnTrackerAdded);
-            emitter.removeObserver(EntityEventType.CameraTrackerRemoved,
+            emitter.RemoveObserver(EntityEventType.CameraTrackerRemoved,
                     OnTrackerRemoved);
         }
 
-        private void OnTrackerAdded(Entity entity)
+        private void OnTrackerAdded(Entity Entity)
         {
             Func<Vector2> positionFunc;
 
-            if (entity.getComponent<Velocity>(onlyReturnInitializedComponents: false) is Velocity v && v != null)
+            if (Entity.GetComponent<Velocity>(onlyReturnInitializedComponents: false) is Velocity v && v != null)
             {
-                positionFunc = () => entity.position + (v.Value * 20);
+                positionFunc = () => Entity.Position + (v.Value * 30f);
             }
             else
             {
-                positionFunc = () => entity.position;
+                positionFunc = () => Entity.Position;
             }
 
             _positionGetters.Add(positionFunc);
         }
 
-        private void OnTrackerRemoved(Entity entity)
+        private void OnTrackerRemoved(Entity Entity)
         {
             Func<Vector2> positionFunc;
-            if (entity.getComponent<Velocity>(onlyReturnInitializedComponents: false) is Velocity v && v != null)
+            if (Entity.GetComponent<Velocity>(onlyReturnInitializedComponents: false) is Velocity v && v != null)
             {
-                positionFunc = () => entity.position + (v.Value * 20);
+                positionFunc = () => Entity.Position + (v.Value * 30);
             }
             else
             {
-                positionFunc = () => entity.position;
+                positionFunc = () => Entity.Position;
             }
 
             _positionGetters.Remove(positionFunc);
         }
 
-        public override void update()
+        public override void Update()
         {
             if (_positionGetters.Count == 0)
             {
                 return;
             }
 
-            _scrollZoom = Math.Min(Math.Max(_scrollZoom + Input.mouseWheelDelta * 0.0025f, -2f), 8f);
-            Console.WriteLine(_scrollZoom);
+            _scrollZoom = Math.Min(Math.Max(_scrollZoom + Input.MouseWheelDelta * 0.0025f, -2f), 8f);
 
             Vector2 targetPosition;
             float targetZoom = 1.0f;
@@ -96,20 +95,20 @@ namespace NewGame.Shared.SceneComponents
             }
             else
             {
-                BoundingBox.CreateFromPoints(_positionGetters.Select(position => position().toVector3()))
+                BoundingBox.CreateFromPoints(_positionGetters.Select(position => position().ToVector3()))
                     .Deconstruct(out var min, out var max);
 
                 var maxXDistance = max.X - min.X;
                 var maxYDistance = max.Y - min.Y;
-                var targetWidth = Math.Max(Screen.width, maxXDistance + 100);
-                var targetHeight = Math.Max(Screen.height, maxYDistance + 100);
+                var targetWidth = Math.Max(Screen.Width, maxXDistance + 100);
+                var targetHeight = Math.Max(Screen.Height, maxYDistance + 100);
 
-                targetZoom = _baseZoom * Math.Min(Screen.width / targetWidth, Screen.height / targetHeight) * _scrollZoom;
-                targetPosition = min.toVector2() + ((max - min).toVector2() / 2);
+                targetZoom = _baseZoom * Math.Min(Screen.Width / targetWidth, Screen.Height / targetHeight) * _scrollZoom;
+                targetPosition = min.ToVector2() + ((max - min).ToVector2() / 2);
             }
 
-            _camera.rawZoom = Mathf.lerp(_camera.rawZoom, targetZoom, Time.deltaTime * 4.0f);
-            _camera.position = Vector2.Lerp(_camera.position, targetPosition, Time.deltaTime * 4.0f);
+            _camera.RawZoom = Mathf.Lerp(_camera.RawZoom, targetZoom, Time.DeltaTime * 4.0f);
+            _camera.Position = Vector2.Lerp(_camera.Position, targetPosition, Time.DeltaTime * 4.0f);
         }
 
     }

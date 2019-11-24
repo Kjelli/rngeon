@@ -18,11 +18,11 @@ namespace NewGame.Shared
             Window.AllowUserResizing = true;
             Window.Title = "New Game";
             //Core.debugRenderEnabled = true;
-            DebugConsole.consoleKey = Keys.F2;
-            DebugConsole.renderScale = 3;
-            Screen.setSize(800, 600);
+            DebugConsole.ConsoleKey = Keys.F2;
+            DebugConsole.RenderScale = 3;
+            Screen.SetSize(800, 600);
 
-            scene = new NewScene();
+            Scene = new NewScene();
         }
     }
 }

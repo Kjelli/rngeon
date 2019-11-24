@@ -11,7 +11,7 @@ namespace NewGame.Shared.Utilities
         public static T Deserialize<T>(string filename)
         {
             var deserializer = new Serializer();
-            var path = $"{Core.content.RootDirectory}/{filename}.{Extension}";
+            var path = $"{Core.Content.RootDirectory}/{filename}.{Extension}";
             var obj = deserializer.Deserialize<T>(File.ReadAllText(path));
             return obj;
         }

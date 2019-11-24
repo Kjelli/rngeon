@@ -1,20 +1,20 @@
-﻿using NewGame.Shared.Components;
+﻿using NewGame.Shared.Entities.Components;
 using Nez;
 
 namespace NewGame.Shared.Systems
 {
     public class EntityMover : EntityProcessingSystem
     {
-        public EntityMover() : base(new Matcher().all(typeof(Mover), typeof(Velocity)))
+        public EntityMover() : base(new Matcher().All(typeof(Mover), typeof(Velocity)))
         {
         }
 
-        public override void process(Entity entity)
+        public override void Process(Entity Entity)
         {
-            var mover = entity.getComponent<Mover>();
-            var velocity = entity.getComponent<Velocity>();
+            var mover = Entity.GetComponent<Mover>();
+            var velocity = Entity.GetComponent<Velocity>();
 
-            mover.move(velocity.Value, out _);
+            mover.Move(velocity.Value, out _);
         }
     }
 }

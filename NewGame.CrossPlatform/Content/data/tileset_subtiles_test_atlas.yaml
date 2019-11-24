@@ -5,21 +5,9 @@ TileSource: tileset_subtiles_test
 TileAtlas:
   - Type: Void
     Index: 0
-    MasksWith:
-      - Wall
   - Type: Floor
     Index: 1
-    MaskKind: Brick
   - Type: Wall
     Index: 2
-    MaskKind: Rough
   - Type: Door
     Index: 3
-MaskSource: tileset_subtile_masks
-MaskAtlas:
-  - Name: Rough
-    StartIndex: 0
-    EndIndex: 3
-  - Name: Brick
-    StartIndex: 4
-    EndIndex: 7

@@ -1,8 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using NewGame.Shared.Components;
-using NewGame.Shared.Components.Generation;
 using NewGame.Shared.Entities;
+using NewGame.Shared.Entities.Components;
+using NewGame.Shared.Entities.Components.Generation;
 using NewGame.Shared.SceneComponents;
 using NewGame.Shared.Systems;
 using Nez;
@@ -16,95 +16,97 @@ namespace NewGame.Shared.Scenes
 
         public DeferredLightingRenderer DeferredRenderer { get; private set; }
 
-        public override void initialize()
+        public override void Initialize()
         {
             _sceneAssets = new string[] {
-                Content.Textures.Test,
-                Content.Textures.Tileset_test,
-                Content.Textures.Tileset_props
+                Shared.Content.Textures.Test,
+                Shared.Content.Textures.Tileset_test,
+                Shared.Content.Textures.Tileset_props
             };
 
-            Screen.isFullscreen = true;
-            clearColor = Color.Black;
-            setDesignResolution(800, 600, SceneResolutionPolicy.ShowAll);
-            DeferredRenderer = addRenderer(new DeferredLightingRenderer(0, Constants.RenderLayerLight,
-                Constants.RenderLayerMap,
+            Screen.IsFullscreen = true;
+            ClearColor = Color.Black;
+            SetDesignResolution(800, 600, SceneResolutionPolicy.ShowAll);
+            DeferredRenderer = AddRenderer(new DeferredLightingRenderer(0,
+                Constants.RenderLayerLight,
+                Constants.RenderLayerMapFloor,
+                Constants.RenderLayerMapWall,
                 Constants.RenderLayerPlayer,
                 Constants.RenderLayerProps));
-            DeferredRenderer.setAmbientColor(Color.Black);
-            DeferredRenderer.setClearColor(Color.Black);
-            addRenderer(new ScreenSpaceRenderer(1, Constants.RenderLayerScreenSpace));
-            addSceneComponent(new SceneEventEmitter());
-            addSceneComponent(new SmartCamera());
-            addEntityProcessor(new EntityMover());
-            addEntityProcessor(new PlayerSystem());
+            DeferredRenderer.SetClearColor(Color.Black);
 
-            //addPostProcessor(new BloomPostProcessor(2))
-            //    .setBloomSettings(BloomSettings.presetSettings[5]);
+            AddRenderer(new ScreenSpaceRenderer(1, Constants.RenderLayerScreenSpace));
+            AddSceneComponent(new SceneEventEmitter());
+            AddSceneComponent(new SmartCamera());
+            AddEntityProcessor(new EntityMover());
+            AddEntityProcessor(new PlayerSystem());
+
+            //AddPostProcessor(new BloomPostProcessor(2))
+            //    .SetBloomSettings(BloomSettings.preSetSettings[5]);
 
             foreach (var asset in _sceneAssets)
             {
-                content.Load<Texture2D>(asset);
+                Content.Load<Texture2D>(asset);
             }
         }
 
-        public override void onStart()
+        public override void OnStart()
         {
             PopulateScene();
         }
 
+        public override void Update()
+        {
+            base.Update();
+        }
+
         public void PopulateScene()
         {
-            var mapWidth = 50;
-            var mapHeight = 50;
-            var minRoomSize = new Point(15, 10);
-            var maxRoomSize = new Point(30, 20);
+            var mapWidth = 35;
+            var mapHeight = 35;
 
-            var settings = new DungeonMapSettings
-            {
-                Width = mapWidth,
-                Height = mapHeight,
-                MinRoomSize = minRoomSize,
-                MaxRoomSize = maxRoomSize,
-                TileSheet = Content.Data.Tileset_subtiles_test_atlas
-            };
+            var settings = DungeonMapGeneratorSettings.Random(mapWidth, mapHeight);
+            DeferredRenderer.SetAmbientColor(settings.AmbientColor);
 
             var map = EntityFactory.Presets
-                .DungeonMap(settings)
+                .DungeonMap()
                 .AtPosition(0, 0)
                 .Create();
-            addEntity(map);
+            map.Generate(settings);
+            AddEntity(map);
 
             var miniMap = EntityFactory.Presets
-                .Minimap(map.getComponent<DungeonMapComponent>().Tiles)
-                .AtPosition(camera.bounds.width - mapWidth - 20, 20)
+                .Minimap(map.TileLayers)
+                .AtPosition(Camera.Bounds.Width - mapWidth - 20, 20)
                 .Create();
-            addEntity(miniMap);
+            AddEntity(miniMap);
+
+            var spawn = map.Spawn;
 
             var player = EntityFactory.Presets
                 .Player()
-                .AtPosition(mapWidth / 2 * 16, mapHeight / 2 * 16)
+                .AtPosition(spawn.Position.X, spawn.Position.Y)
                 .AddInput<KeyboardController>()
                 .Create();
-            addEntity(player);
+            AddEntity(player);
 
             // Add extra players with random input
-            var n = 3;
+            var n = 0;
             for (var i = 0; i < n; i++)
             {
                 float x, y;
                 do
                 {
-                    x = Random.nextFloat() * mapWidth * Tile.Width;
-                    y = Random.nextFloat() * mapHeight * Tile.Height;
-                } while (map.getComponent<DungeonMapComponent>().GetTileAtPosition(x, y).Type != TileType.Floor);
+                    x = Random.NextFloat() * mapWidth * Tile.Width;
+                    y = Random.NextFloat() * mapHeight * Tile.Height;
+                } while (map.GetTileAtPosition(x, y).Type != TileType.Floor);
 
                 var bot = EntityFactory.Presets.UntrackedPlayer()
                     .With(new MiniMapTracker(Color.Blue))
                     .AddInput<RandomInputController>()
                     .AtPosition(x, y)
                     .Create();
-                addEntity(bot);
+                AddEntity(bot);
             }
         }
     }

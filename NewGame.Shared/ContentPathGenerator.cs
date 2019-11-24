@@ -49,8 +49,10 @@ namespace NewGame.Shared
 		}
 		public static class Textures
 		{
+			public const string Spritelight = @"textures\sprite-light";
 			public const string Test = @"textures\test";
 			public const string Tileset_props = @"textures\tileset_props";
+			public const string Tileset_props_normal = @"textures\tileset_props_normal";
 			public const string Tileset_subtiles_test = @"textures\tileset_subtiles_test";
 			public const string Tileset_subtiles_test_normal = @"textures\tileset_subtiles_test_normal";
 			public const string Tileset_subtile_masks = @"textures\tileset_subtile_masks";

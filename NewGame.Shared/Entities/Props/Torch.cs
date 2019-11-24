@@ -10,7 +10,7 @@ namespace NewGame.Shared.Entities
     {
         public const float BaseIntensity = 3.00f;
         public const float BaseRadius = 155f;
-        public static readonly Color Color = Color.Orange;
+        public static readonly Color BaseColor = Color.Orange;
 
         private float _flickerOffset;
         private float _flickerSpeed;
@@ -18,41 +18,50 @@ namespace NewGame.Shared.Entities
 
         private ParticleEmitter _emitter;
 
+        public Color Color { get; set; } = BaseColor;
+
         public Torch()
         {
-            _flickerOffset = Random.nextFloat() * 10f;
-            _flickerSpeed = 500f + Random.nextFloat() * 300f;
+            _flickerOffset = Random.NextFloat() * 10f;
+            _flickerSpeed = 500f + Random.NextFloat() * 300f;
+        }
+
+        public override void OnAddedToScene()
+        {
             _emitter = new ParticleEmitter(new ParticleEmitterConfig
             {
-                blendFuncSource = Blend.BlendFactor,
-                angle = 270,
-                angleVariance = 15,
-                speed = 10f,
-                speedVariance = 3f,
-                rotatePerSecond = 3f,
-                startColor = Color.Orange,
-                finishColor = Color.Black,
-                finishParticleSize = 0f,
-                startParticleSize = 2f,
-                emissionRate = 1.5f + Random.nextFloat() * 0.5f,
-                duration = -1,
-                gravity = new Vector2(0, 8f),
-                sourcePosition = position,
-                particleLifespan = 3f,
-                particleLifespanVariance = 1f,
-                emitterType = ParticleEmitterType.Gravity,
-                maxParticles = 10000,
+                BlendFuncSource = Blend.BlendFactor,
+                Angle = 270,
+                AngleVariance = 15,
+                Speed = 10f,
+                SpeedVariance = 3f,
+                RotatePerSecond = 3f,
+                StartColor = Color,
+                StartColorVariance = Color,
+                FinishColor = Color.Black,
+                FinishParticleSize = 0f,
+                StartParticleSize = 2f,
+                EmissionRate = 1.5f + Random.NextFloat() * 0.5f,
+                Duration = -1,
+                Gravity = new Vector2(0, 8f),
+                SourcePosition = Position,
+                ParticleLifespan = 3f,
+                ParticleLifespanVariance = 1f,
+                EmitterType = ParticleEmitterType.Gravity,
+                MaxParticles = 10000,
             });
 
-            _emitter.renderLayer = Constants.RenderLayerProps;
-            addComponent(_emitter);
+            _emitter.SetRenderLayer(Constants.RenderLayerProps);
+            AddComponent(_emitter);
         }
 
 
-        public override void update()
+        public override void Update()
         {
-            base.update();
-            getComponent<PointLight>().setIntensity(BaseIntensity - _flickerIntensity * (Mathf.sin(Time.time * Time.deltaTime * _flickerSpeed + _flickerOffset) + 1f));
+            base.Update();
+            var flickerFactor = Mathf.Sin(Time.TimeSinceSceneLoad * Time.DeltaTime * _flickerSpeed + _flickerOffset);
+            var newIntensity = BaseIntensity - _flickerIntensity * flickerFactor + 1f;
+            GetComponent<PointLight>().SetIntensity(newIntensity);
         }
     }
 

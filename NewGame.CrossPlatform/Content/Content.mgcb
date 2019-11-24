@@ -113,6 +113,18 @@
 #begin nez/effects/Vignette.mgfxo
 /copy:nez/effects/Vignette.mgfxo
 
+#begin textures/sprite-light.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textures/sprite-light.png
+
 #begin textures/test.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -136,6 +148,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:textures/tileset_props.png
+
+#begin textures/tileset_props_normal.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:textures/tileset_props_normal.png
 
 #begin textures/tileset_subtile_masks.png
 /importer:TextureImporter

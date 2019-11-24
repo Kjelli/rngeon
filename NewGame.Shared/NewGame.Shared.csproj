@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>NewGame.Shared</RootNamespace>
     <AssemblyName>NewGame.Shared</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
     <NuGetPackageImportStamp>
@@ -44,9 +44,6 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.ValueTuple, Version=4.0.3.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-      <HintPath>..\packages\System.ValueTuple.4.5.0\lib\netstandard1.0\System.ValueTuple.dll</HintPath>
-    </Reference>
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -55,37 +52,37 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Components\Generation\BinarySpacePartition.cs" />
-    <Compile Include="Components\CameraTracker.cs" />
-    <Compile Include="Components\DungeonMapComponent.cs" />
-    <Compile Include="Components\Generation\Connector.cs" />
-    <Compile Include="Components\Generation\DungeonMapGenerator.cs" />
-    <Compile Include="Components\Generation\Room.cs" />
-    <Compile Include="Components\Generation\SubtileResolver.cs" />
-    <Compile Include="Components\InputController.cs" />
-    <Compile Include="Components\ExplorableTerrainComponent.cs" />
-    <Compile Include="Components\MiniMapTracker.cs" />
-    <Compile Include="Components\RandomInputController.cs" />
-    <Compile Include="Components\KeyboardController.cs" />
-    <Compile Include="Components\Generation\Tile.cs" />
-    <Compile Include="Components\Generation\TileType.cs" />
-    <Compile Include="Components\Velocity.cs" />
+    <Compile Include="Entities\Components\DungeonMapLayerRenderer.cs" />
+    <Compile Include="Entities\Components\Generation\BinarySpacePartition.cs" />
+    <Compile Include="Entities\Components\CameraTracker.cs" />
+    <Compile Include="Entities\Components\Generation\Connector.cs" />
+    <Compile Include="Entities\Components\Generation\DungeonMapGenerator.cs" />
+    <Compile Include="Entities\Components\Generation\Room.cs" />
+    <Compile Include="Entities\Components\InputController.cs" />
+    <Compile Include="Entities\Components\MiniMapTracker.cs" />
+    <Compile Include="Entities\Components\PlayerCollisionTriggerListener.cs" />
+    <Compile Include="Entities\Components\RandomInputController.cs" />
+    <Compile Include="Entities\Components\KeyboardController.cs" />
+    <Compile Include="Entities\Components\Generation\Tile.cs" />
+    <Compile Include="Entities\Components\Generation\TileType.cs" />
+    <Compile Include="Entities\Components\Velocity.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="ContentPathGenerator.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
       <DependentUpon>ContentPathGenerator.tt</DependentUpon>
     </Compile>
-    <Compile Include="Components\Generation\Subtile.cs" />
-    <Compile Include="Data\TileSheet.cs" />
-    <Compile Include="Components\Generation\DungeonMapSettings.cs" />
+    <Compile Include="Entities\Components\Generation\TileSheet.cs" />
+    <Compile Include="Entities\Components\Generation\DungeonMapSettings.cs" />
     <Compile Include="Entities\EntityFactory.cs" />
-    <Compile Include="Entities\Map.cs" />
+    <Compile Include="Entities\DungeonMap.cs" />
     <Compile Include="Entities\MiniMap.cs" />
     <Compile Include="Entities\Player.cs" />
+    <Compile Include="Entities\Props\Exit.cs" />
+    <Compile Include="Entities\Props\Spawn.cs" />
     <Compile Include="Entities\Props\Torch.cs" />
     <Compile Include="Game.cs" />
-    <Compile Include="Components\MiniMapComponent.cs" />
+    <Compile Include="Entities\Components\MiniMapComponent.cs" />
     <Compile Include="SceneComponents\SceneEventEmitter.cs" />
     <Compile Include="SceneComponents\SmartCamera.cs" />
     <Compile Include="Scenes\NewScene.cs" />

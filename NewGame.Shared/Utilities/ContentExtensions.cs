@@ -11,7 +11,7 @@ namespace NewGame.Shared.Utilities
         {
             using (BinaryReader Reader = new BinaryReader(File.OpenRead($@"Content\{name}.mgfxo")))
             {
-                Effect effect = new Effect(Core.graphicsDevice, Reader.ReadBytes((int)Reader.BaseStream.Length));
+                Effect effect = new Effect(Core.GraphicsDevice, Reader.ReadBytes((int)Reader.BaseStream.Length));
                 return effect;
             }
         }
